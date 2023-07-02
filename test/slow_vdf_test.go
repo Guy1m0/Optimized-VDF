@@ -5,13 +5,14 @@ import (
 	"encoding/csv"
 	"encoding/hex"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
 	"os"
 	"strconv"
 	"testing"
+
 	"github.com/harmony-one/vdf/src/vdf_go"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateProofCSV(t *testing.T) {

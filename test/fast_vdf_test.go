@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/hex"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
 	"github.com/harmony-one/vdf/src/vdf_go"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test2047(t *testing.T) {
@@ -44,4 +45,3 @@ func Test5000Verify(t *testing.T) {
 	buf, _ := hex.DecodeString(ref_output)
 	assert.Equal(t, true, vdf_go.VerifyVDF(seed, buf, 5000, 2048), "must be true")
 }
-

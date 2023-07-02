@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/harmony-one/vdf/src/vdf_go"
+	vdf_go "github.com/Guy1m0/Optimized-VDF/src"
 )
 
 func main() {

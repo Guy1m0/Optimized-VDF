@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"math/big"
-	"github.com/harmony-one/vdf/src/vdf_go"
+
+	vdf_go "github.com/Guy1m0/Optimized-VDF/src"
 )
 
 func TestClassDiscriminant(t *testing.T) {
