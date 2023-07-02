@@ -1,8 +1,11 @@
-module github.com/harmony-one/vdf
+module github.com/Guy1m0/Optimized-VDF
 
 go 1.20
 
-require github.com/stretchr/testify v1.8.4
+require (
+	github.com/harmony-one/vdf v1.0.0
+	github.com/stretchr/testify v1.8.4
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

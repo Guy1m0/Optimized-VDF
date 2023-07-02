@@ -4,7 +4,8 @@ import (
 	//"encoding/hex"
 	"fmt"
 	"math"
-	//"github.com/harmony-one/vdf/src/vdf_go"
+
+	"github.com/harmony-one/vdf/src/vdf_go"
 )
 
 func main() {
