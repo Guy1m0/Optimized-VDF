@@ -17,9 +17,10 @@ int main(int argc, char *argv[]) {
 
         // Argument parsing
         int t = std::atoi(argv[1]);
-        int lambda = std::atoi(argv[2]);
-        int k = std::atoi(argv[3]);
-        int w = std::atoi(argv[4]);
+        int num_VDFs = std::atoi(argv[2]);
+        int lambda = std::atoi(argv[3]);
+        int k = std::atoi(argv[4]);
+        int w = std::atoi(argv[5]);
 
         //t = 6;
         lambda = 1024;
@@ -28,15 +29,56 @@ int main(int argc, char *argv[]) {
 
         srand(time(NULL));
 
-
         Wesolowski vdf = Wesolowski();
 
         // Running the Setup phase of algorithm
+        auto start = std::chrono::high_resolution_clock::now();
         vdf.setup(lambda, k);
+
+        // Drawing a random input from the RSA group for each VDF
+        std::vector<mpz_t> x_s(num_VDFs);
+        std::vector<mpz_t> pi_s(num_VDFs);
+        std::vector<mpz_t> alphas(num_VDFs);
+
+        for (int i = 0; i < num_VDFs; i++) {
+                mpz_init(x_s[i]);
+                vdf.generate(x_s[i]);
+
+                mpz_init(pi_s[i]);
+
+                mpz_init(alphas[i]);
+                vdf.generate_alpha(alphas[i], k);
+        }
+
+        auto finish = std::chrono::high_resolution_clock::now();
+        auto setup_time = finish - start;
+
+        mpz_t l;
+        mpz_init(l);
+        vdf.hash_prime(l, x_s[0]);
+
+        vdf.batch_evaluate(l, pi_s, x_s, pow(2, t), alphas);
+        
         // Drawing a random input from the RSA group
         mpz_t x;
         mpz_init(x);
         vdf.generate(x);
+
+        // Generate num_VDFs random xs
+        std::vector<mpz_t> xs(num_VDFs);
+        for (int i = 0; i < num_VDFs; i++) {
+                mpz_init(xs[i]);
+                vdf.generate(xs[i]);
+        }
+
+        // Generate num_VDFs random alphas
+        std::vector<mpz_t> alphas(num_VDFs);
+        for (int i = 0; i < num_VDFs; i++) {
+                mpz_init(alphas[i]);
+                mpz_urandomb(alphas[i], rng, k); // Assuming rng is a random number generator and k is the number of bits in alpha
+        }      
+
+
         //std::cout << "Random X: " << x;
         //Here is the evaluation part. We combine the evaluation and proof however there are two chrono for the separate phases.
         mpz_t l, pi;

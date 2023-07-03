@@ -33,8 +33,6 @@ Wesolowski::Wesolowski() {
 
 // Generate (N,p,q)
 void Wesolowski::setup(int _lambda, int _k) {
-        auto start = std::chrono::high_resolution_clock::now();
-
         lambda = _lambda;
         k = _k;
 
@@ -52,9 +50,6 @@ void Wesolowski::setup(int _lambda, int _k) {
 
         mpz_init(N);
         mpz_mul(N, p, q);
-
-        auto finish = std::chrono::high_resolution_clock::now();
-        setup_time = finish - start;
 }
 
 // Creates a random input for the VDF
@@ -62,32 +57,17 @@ void Wesolowski::generate(mpz_t& dest) {
         mpz_urandomm(dest, rstate, N);
 }
 
-Proof Wesolowski::evaluate(mpz_t l, mpz_t pi, const mpz_t x,
+void Wesolowski::evaluate(mpz_t l, mpz_t pi, const mpz_t x,
                            const long challenge) {
-
-        // HERE WE START THE EVALUATION
-        auto start_eval = std::chrono::high_resolution_clock::now();
 
         mpz_t exp_challenge;
         mpz_init(exp_challenge);
         mpz_ui_pow_ui(exp_challenge, 2, challenge);
 
-
         mpz_init(y_saved);
         mpz_powm(y_saved, x, exp_challenge, N);
 
-        auto finish_eval = std::chrono::high_resolution_clock::now();
-
-        eval_time = finish_eval - start_eval;
-
-
-        // WE FINISHED THE EVALUATION
-
-        // HERE WE START THE PROOF COMPUTATION
-
-        auto start_proof = std::chrono::high_resolution_clock::now();
-
-        hash_prime(l, x);
+        //hash_prime(l, x);
 
         mpz_t q;
         mpz_init(q);
@@ -95,25 +75,27 @@ Proof Wesolowski::evaluate(mpz_t l, mpz_t pi, const mpz_t x,
 
         mpz_powm(pi, x, q, N);
 
-
-        auto finish_proof = std::chrono::high_resolution_clock::now();
-        proof_time = finish_proof - start_proof;
-
-
-        Proof proof_sent = Proof();
-        return proof_sent;
 }
 
 
-void Wesolowski::evaluate_batch(mpz_t* y_saves, mpz_t* proofs, mpz_t* alphas, const mpz_t* x_s, long challenge, int batch_size) {
-    mpz_t l, pi;
-    mpz_init(l);
-    mpz_init(pi);
+void Wesolowski::batch_evaluate(mpz_t l, std::vector<mpz_t>& pi_s, const std::vector<mpz_t>& x_s, long challenge, mpz_t pi_agg, mpz_t x_agg, std::vector<mpz_t>& alphas, int batch_size) {
 
     for (int i = 0; i < batch_size; ++i) {
-        evaluate(l, pi, x_s[i], challenge);
-        mpz_powm(y_saves[i], x_s[i], alphas[i], N);
-        mpz_powm(proofs[i], pi, alphas[i], N);
+        evaluate(l, pi_s[i], x_s[i], challenge);
+
+        mpz_t x_tmp, pi_tmp;
+        mpz_init(x_tmp);
+        mpz_powm(x_tmp, x_s[i], alphas[i], N);
+        mpz_mul(x_agg, x_agg, x_tmp);
+        mpz_mod(x_agg, x_agg, N);
+        mpz_clear(x_tmp);
+
+        mpz_init(pi_tmp);
+        mpz_powm(pi_tmp, pi_s[i], alphas[i], N);
+        mpz_mul(pi_agg, pi_agg, pi_tmp);
+        mpz_mod(pi_agg, pi_agg, N);
+        mpz_clear(pi_tmp);
+
     }
 }
 
@@ -175,47 +157,6 @@ bool Wesolowski::naive_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi) {
                 exit(1);
                 return 0;
         }
-}
-
-bool Wesolowski::batch_verify(mpz_t* y_saves, mpz_t* proofs, mpz_t* alphas, long challenge, int batch_size) {
-    mpz_t pi_agg, y_agg, alpha_sum;
-    mpz_init(pi_agg);
-    mpz_init(y_agg);
-    mpz_init(alpha_sum);
-
-    mpz_set_ui(pi_agg, 1);
-    mpz_set_ui(y_agg, 1);
-    
-    for (int i = 0; i < batch_size; ++i) {
-        mpz_mul(pi_agg, pi_agg, proofs[i]);
-        mpz_mul(y_agg, y_agg, y_saves[i]);
-        mpz_add(alpha_sum, alpha_sum, alphas[i]);
-    }
-    
-    return verify(y_agg, alpha_sum, pi_agg, challenge);
-}
-
-bool Wesolowski::verify(const mpz_t y_saved, const mpz_t x, long challenge, const mpz_t l, const mpz_t pi) {
-    mpz_t exp_challenge;
-    mpz_init(exp_challenge);
-    mpz_ui_pow_ui(exp_challenge, 2, challenge);
-
-    mpz_t y;
-    mpz_init(y);
-    mpz_powm(y, x, exp_challenge, N);
-
-    if (mpz_cmp(y, y_saved) == 0) {
-        mpz_t q;
-        mpz_init(q);
-        mpz_fdiv_q(q, exp_challenge, l);
-
-        mpz_powm(y, pi, q, N);
-        
-        if (mpz_cmp(y, x) == 0) {
-            return true;
-        }
-    }
-    return false;
 }
 
 void exponentiation(mpz_t ret, mpz_t radix, mpz_t exp, mpz_t N)
