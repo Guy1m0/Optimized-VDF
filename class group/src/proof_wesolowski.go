@@ -39,6 +39,7 @@ func approximateParameters(T int) (int, int, int) {
 }
 
 func iterateSquarings(x *ClassGroup, powers_to_calculate []int, stop <-chan struct{}) map[int]*ClassGroup {
+	defer timeTrack(time.Now())
 	powers_calculated := make(map[int]*ClassGroup)
 
 	previous_power := 0
@@ -74,7 +75,7 @@ func GenerateVDF(seed []byte, iterations, int_size_bits int) ([]byte, []byte) {
 // seed : input, more like x in paper
 func GenerateVDFWithStopChan(seed []byte, iterations, int_size_bits int, stop <-chan struct{}) ([]byte, []byte) {
 	defer timeTrack(time.Now())
-
+	// Helps to defin this class group
 	D := CreateDiscriminant(seed, int_size_bits)
 	x := NewClassGroupFromAbDiscriminant(big.NewInt(2), big.NewInt(1), D)
 
@@ -233,6 +234,13 @@ func generateProof(identity, x, y *ClassGroup, T, k, l int, powers map[int]*Clas
 	return proof
 }
 
+/*
+- discriminant: The discriminant D to use for the class group.
+- x: An initial element of the class group.
+- iterations: The number of iterations to run the VDF, controlling the delay.
+- int_size_bits: The size in bits of the integers used, likely relevant for security considerations.
+- stop: A channel that can be used to stop the computation before it's finished.
+*/
 func calculateVDF(discriminant *big.Int, x *ClassGroup, iterations, int_size_bits int, stop <-chan struct{}) (y, proof *ClassGroup) {
 	L, k, _ := approximateParameters(iterations)
 
@@ -292,6 +300,7 @@ func verifyProof(x, y, proof *ClassGroup, T int) bool {
 	}
 }
 
+// it will print out a log message with the function's name and the time it took to execute
 func timeTrack(start time.Time) {
 	elapsed := time.Since(start)
 
