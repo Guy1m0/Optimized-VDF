@@ -64,7 +64,7 @@ void Wesolowski::evaluate(mpz_t l, mpz_t pi, const mpz_t x,
         mpz_init(exp_challenge);
         mpz_ui_pow_ui(exp_challenge, 2, challenge);
 
-        mpz_init(y_saved);
+//        mpz_init(y_saved);
         mpz_powm(y_saved, x, exp_challenge, N);
 
         //hash_prime(l, x);
@@ -78,24 +78,28 @@ void Wesolowski::evaluate(mpz_t l, mpz_t pi, const mpz_t x,
 }
 
 
-void Wesolowski::batch_evaluate(mpz_t l, std::vector<mpz_t>& pi_s, const std::vector<mpz_t>& x_s, long challenge, mpz_t pi_agg, mpz_t x_agg, std::vector<mpz_t>& alphas, int batch_size) {
+void Wesolowski::batch_evaluate(mpz_t l, std::vector<mpz_t*>& pi_s, const std::vector<mpz_t*>& x_s, long challenge, mpz_t pi_agg, mpz_t x_agg, std::vector<mpz_t*>& alphas, int batch_size) {
 
     for (int i = 0; i < batch_size; ++i) {
-        evaluate(l, pi_s[i], x_s[i], challenge);
+        if (pi_s[i] == nullptr || x_s[i] == nullptr || alphas[i] == nullptr) {
+            std::cerr << "Error: null pointer in input arrays at index " << i << std::endl;
+            continue;
+        }
+
+        evaluate(l, *pi_s[i], *x_s[i], challenge);
 
         mpz_t x_tmp, pi_tmp;
         mpz_init(x_tmp);
-        mpz_powm(x_tmp, x_s[i], alphas[i], N);
+        mpz_powm(x_tmp, *x_s[i], *alphas[i], N);
         mpz_mul(x_agg, x_agg, x_tmp);
         mpz_mod(x_agg, x_agg, N);
         mpz_clear(x_tmp);
 
         mpz_init(pi_tmp);
-        mpz_powm(pi_tmp, pi_s[i], alphas[i], N);
+        mpz_powm(pi_tmp, *pi_s[i], *alphas[i], N);
         mpz_mul(pi_agg, pi_agg, pi_tmp);
         mpz_mod(pi_agg, pi_agg, N);
         mpz_clear(pi_tmp);
-
     }
 }
 

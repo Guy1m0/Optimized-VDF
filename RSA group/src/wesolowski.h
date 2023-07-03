@@ -16,9 +16,7 @@ void generate(mpz_t& dest);
 void generate_alpha(mpz_t alpha, int bit_size);
 void evaluate(mpz_t l, mpz_t pi, const mpz_t x,
                long challenge);
-void batch_evaluate(mpz_t l, std::vector<mpz_t>& pi_s, 
-                const std::vector<mpz_t>& x_s, long challenge, 
-                mpz_t pi_agg, mpz_t x_agg, std::vector<mpz_t>& alphas, int batch_size);
+void batch_evaluate(mpz_t l, std::vector<mpz_t*>& pi_s, const std::vector<mpz_t*>& x_s, long challenge, mpz_t pi_agg, mpz_t x_agg, std::vector<mpz_t*>& alphas, int batch_size);
 bool parallel_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi);
 bool parallel_diff_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi);
 bool naive_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi);
