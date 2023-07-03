@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
         int w = std::atoi(argv[4]);
 
         //t = 6;
-        //lambda = 8192;
+        lambda = 1024;
         k = 128;
         w = 0;
 
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
         mpz_t x;
         mpz_init(x);
         vdf.generate(x);
-        std::cout << "Random X: " << x;
+        //std::cout << "Random X: " << x;
         //Here is the evaluation part. We combine the evaluation and proof however there are two chrono for the separate phases.
         mpz_t l, pi;
         mpz_init(l);
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 
         std::cout << "\n setup_time: " << vdf.setup_time.count() << ";" << "\n eval_time: " << vdf.eval_time.count() << ";"
              << "\n proof_time: " << vdf.proof_time.count() << ";" << "\n verify_time: " << vdf.verif_time.count() << "\n";
-        std::cout << vdf.verif_time.count() << std::endl;
+        //std::cout << vdf.verif_time.count() << std::endl;
 
         //file.close();
         return 0;

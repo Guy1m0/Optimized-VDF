@@ -13,11 +13,17 @@ Wesolowski();
 
 void setup(int lambda, int k);
 void generate(mpz_t& dest);
+void generate_alpha(mpz_t alpha, int bit_size);
 Proof evaluate(mpz_t l, mpz_t pi, const mpz_t x,
                long challenge);
+void evaluate_batch(mpz_t* y_saves, mpz_t* proofs, mpz_t* alphas, 
+                const mpz_t* x_s, long challenge, int batch_size);
 bool parallel_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi);
 bool parallel_diff_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi);
 bool naive_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi);
+bool batch_verify(mpz_t* y_saves, mpz_t* proofs, mpz_t* alphas, 
+                long challenge, int batch_size);
+bool verify(const mpz_t y_saved, const mpz_t x, long challenge, const mpz_t l, const mpz_t pi);
 bool optimized_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi, int w);
 std::chrono::duration<double> setup_time;
 std::chrono::duration<double> eval_time;

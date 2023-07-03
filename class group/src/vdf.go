@@ -9,7 +9,7 @@ type VDF struct {
 	finished   bool
 }
 
-//size of long integers in quadratic function group
+// size of long integers in quadratic function group
 const sizeInBits = 2048
 
 // New create a new instance of VDF.

@@ -24,10 +24,14 @@ void Wesolowski::hash_prime(mpz_t l, const mpz_t input)
         mpz_nextprime(l, challenge);
 }
 
+void Wesolowski::generate_alpha(mpz_t alpha, int bit_size) {
+    mpz_urandomb(alpha, rstate, bit_size);
+}
+
 Wesolowski::Wesolowski() {
 }
 
-// Generate N
+// Generate (N,p,q)
 void Wesolowski::setup(int _lambda, int _k) {
         auto start = std::chrono::high_resolution_clock::now();
 
@@ -101,6 +105,18 @@ Proof Wesolowski::evaluate(mpz_t l, mpz_t pi, const mpz_t x,
 }
 
 
+void Wesolowski::evaluate_batch(mpz_t* y_saves, mpz_t* proofs, mpz_t* alphas, const mpz_t* x_s, long challenge, int batch_size) {
+    mpz_t l, pi;
+    mpz_init(l);
+    mpz_init(pi);
+
+    for (int i = 0; i < batch_size; ++i) {
+        evaluate(l, pi, x_s[i], challenge);
+        mpz_powm(y_saves[i], x_s[i], alphas[i], N);
+        mpz_powm(proofs[i], pi, alphas[i], N);
+    }
+}
+
 bool Wesolowski::naive_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi) {
 
         auto start_verif = std::chrono::high_resolution_clock::now();
@@ -161,6 +177,46 @@ bool Wesolowski::naive_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi) {
         }
 }
 
+bool Wesolowski::batch_verify(mpz_t* y_saves, mpz_t* proofs, mpz_t* alphas, long challenge, int batch_size) {
+    mpz_t pi_agg, y_agg, alpha_sum;
+    mpz_init(pi_agg);
+    mpz_init(y_agg);
+    mpz_init(alpha_sum);
+
+    mpz_set_ui(pi_agg, 1);
+    mpz_set_ui(y_agg, 1);
+    
+    for (int i = 0; i < batch_size; ++i) {
+        mpz_mul(pi_agg, pi_agg, proofs[i]);
+        mpz_mul(y_agg, y_agg, y_saves[i]);
+        mpz_add(alpha_sum, alpha_sum, alphas[i]);
+    }
+    
+    return verify(y_agg, alpha_sum, pi_agg, challenge);
+}
+
+bool Wesolowski::verify(const mpz_t y_saved, const mpz_t x, long challenge, const mpz_t l, const mpz_t pi) {
+    mpz_t exp_challenge;
+    mpz_init(exp_challenge);
+    mpz_ui_pow_ui(exp_challenge, 2, challenge);
+
+    mpz_t y;
+    mpz_init(y);
+    mpz_powm(y, x, exp_challenge, N);
+
+    if (mpz_cmp(y, y_saved) == 0) {
+        mpz_t q;
+        mpz_init(q);
+        mpz_fdiv_q(q, exp_challenge, l);
+
+        mpz_powm(y, pi, q, N);
+        
+        if (mpz_cmp(y, x) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void exponentiation(mpz_t ret, mpz_t radix, mpz_t exp, mpz_t N)
 {
