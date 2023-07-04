@@ -57,15 +57,17 @@ void Wesolowski::generate(mpz_t& dest) {
         mpz_urandomm(dest, rstate, N);
 }
 
-void Wesolowski::evaluate(mpz_t l, mpz_t pi, const mpz_t x,
+void Wesolowski::evaluate(mpz_t l, mpz_t* pi, const mpz_t* x, mpz_t* y,
                            const long challenge) {
 
         mpz_t exp_challenge;
         mpz_init(exp_challenge);
         mpz_ui_pow_ui(exp_challenge, 2, challenge);
 
-//        mpz_init(y_saved);
-        mpz_powm(y_saved, x, exp_challenge, N);
+        // mpz_t* y_saved = new mpz_t;
+        // mpz_init(*y_saved);
+        mpz_powm(*y, *x, exp_challenge, N);
+        // y_saveds.push_back(y_saved);  // Store the y_saved value into the vector
 
         //hash_prime(l, x);
 
@@ -73,12 +75,12 @@ void Wesolowski::evaluate(mpz_t l, mpz_t pi, const mpz_t x,
         mpz_init(q);
         mpz_fdiv_q(q, exp_challenge, l);
 
-        mpz_powm(pi, x, q, N);
+        mpz_powm(*pi, *x, q, N);
 
 }
 
 
-void Wesolowski::batch_evaluate(mpz_t l, std::vector<mpz_t*>& pi_s, const std::vector<mpz_t*>& x_s, long challenge, mpz_t pi_agg, mpz_t x_agg, std::vector<mpz_t*>& alphas, int batch_size) {
+void Wesolowski::aggregate(std::vector<mpz_t*>& pi_s, const std::vector<mpz_t*>& x_s, std::vector<mpz_t*>& y_s, mpz_t pi_agg, mpz_t x_agg, mpz_t y_agg, std::vector<mpz_t*>& alphas, int batch_size) {
 
     for (int i = 0; i < batch_size; ++i) {
         if (pi_s[i] == nullptr || x_s[i] == nullptr || alphas[i] == nullptr) {
@@ -86,24 +88,29 @@ void Wesolowski::batch_evaluate(mpz_t l, std::vector<mpz_t*>& pi_s, const std::v
             continue;
         }
 
-        evaluate(l, *pi_s[i], *x_s[i], challenge);
-
-        mpz_t x_tmp, pi_tmp;
+        mpz_t x_tmp, pi_tmp, y_tmp;
         mpz_init(x_tmp);
         mpz_powm(x_tmp, *x_s[i], *alphas[i], N);
         mpz_mul(x_agg, x_agg, x_tmp);
         mpz_mod(x_agg, x_agg, N);
-        mpz_clear(x_tmp);
 
         mpz_init(pi_tmp);
         mpz_powm(pi_tmp, *pi_s[i], *alphas[i], N);
         mpz_mul(pi_agg, pi_agg, pi_tmp);
         mpz_mod(pi_agg, pi_agg, N);
+
+        mpz_init(y_tmp);
+        mpz_powm(y_tmp, *y_s[i], *alphas[i], N);
+        mpz_mul(y_agg, y_agg, y_tmp);
+        mpz_mod(y_agg, y_agg, N);
+
+        mpz_clear(x_tmp);
         mpz_clear(pi_tmp);
+        mpz_clear(y_tmp);
     }
 }
 
-bool Wesolowski::naive_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi) {
+bool Wesolowski::naive_verify(mpz_t x, mpz_t rst, long challenge, mpz_t l, mpz_t pi) {
 
         auto start_verif = std::chrono::high_resolution_clock::now();
 
@@ -147,7 +154,7 @@ bool Wesolowski::naive_verify(mpz_t x, long challenge, mpz_t l, mpz_t pi) {
            std::cout << "L = " << l << std::endl;
            std::cout << "Y = " << y << std::endl;
          */
-        if(mpz_cmp(y, y_saved) == 0) {
+        if(mpz_cmp(y, rst) == 0) {
                 auto finish_verif = std::chrono::high_resolution_clock::now();
 
                 verif_time = finish_verif - start_verif;
